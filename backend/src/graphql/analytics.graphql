@@ -1,0 +1,35 @@
+# ── Analytics Types ──────────────────────────────────────────
+
+type ScanTypeCount {
+  scanType: ScanType!
+  count: Int!
+}
+
+type StatusCount {
+  status: ScanStatus!
+  count: Int!
+}
+
+type UserAnalytics {
+  """Total number of patients for this user"""
+  totalPatients: Int!
+
+  """Total number of scans across all patients"""
+  totalScans: Int!
+
+  """Average number of scans per patient"""
+  averageScansPerPatient: Float!
+
+  """Breakdown of scans by type (X-ray, CT, MRI)"""
+  scanTypeDistribution: [ScanTypeCount!]!
+
+  """Breakdown of scans by status (pending, processed, etc.)"""
+  statusBreakdown: [StatusCount!]!
+}
+
+# ── Queries ─────────────────────────────────────────────────
+
+extend type Query {
+  """Get analytics/dashboard stats for the authenticated user"""
+  myAnalytics: UserAnalytics!
+}

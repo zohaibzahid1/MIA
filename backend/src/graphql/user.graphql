@@ -1,0 +1,11 @@
+scalar Void
+scalar Upload
+type User {
+    id: ID!
+    googleId: String
+    email: String!
+    name: String
+    avatar: String
+    role: String!
+}
+

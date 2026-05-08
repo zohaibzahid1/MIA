@@ -1,0 +1,7 @@
+"How to run migrations" 
+to run the pending migrations: npm run migration:run
+to revert migration : npm run migration:revert
+to generate migration : npm run migration:generate -- src/migrations/nameofyourmigration
+NOTE: 
+Migrations are tracked in chronological order when running.
+Reverting migrations works like a stack — the last applied migration is removed first, one at a time.

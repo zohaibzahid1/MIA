@@ -1,0 +1,146 @@
+# ── Scan Types ──────────────────────────────────────────────
+
+enum ScanType {
+  XRAY
+  CT
+  MRI
+}
+
+enum ScanStatus {
+  PENDING
+  UPLOADING
+  UPLOADED
+  PROCESSING
+  PROCESSED
+  FAILED
+}
+
+enum AIResultStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+type Scan {
+  id: ID!
+  patientId: ID!
+  scanType: ScanType!
+  s3Key: String
+  s3Url: String
+  status: ScanStatus!
+  notes: String
+  originalFileName: String
+  fileSize: Float
+  mimeType: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+
+  patient: Patient
+  aiResults: [AIResult!]
+}
+
+# ── AI Result Types ─────────────────────────────────────────
+
+"""Flexible structure for storing AI analysis results per scan"""
+type AIResult {
+  id: ID!
+  scanId: ID!
+  modelName: String!
+  modelVersion: String
+  status: AIResultStatus!
+  predictions: JSON
+  confidenceScore: Float
+  resultData: JSON
+  processedAt: DateTime
+  processingDurationMs: Int
+  createdAt: DateTime!
+  updatedAt: DateTime!
+
+  scan: Scan
+}
+
+# ── Pre-signed Upload Response ──────────────────────────────
+
+type PresignedUploadResponse {
+  """The created scan ID used for confirmScanUpload and results tracking"""
+  scanId: ID!
+  """The pre-signed PUT URL for direct S3 upload"""
+  uploadUrl: String!
+  """The S3 object key to pass back when confirming the upload"""
+  s3Key: String!
+  """Expiration time of the pre-signed URL (ISO 8601)"""
+  expiresAt: DateTime!
+}
+
+# ── Inputs ──────────────────────────────────────────────────
+
+input CreateScanInput {
+  patientId: ID!
+  scanType: ScanType!
+  notes: String
+  originalFileName: String!
+  mimeType: String
+  fileSize: Float
+}
+
+input UpdateScanInput {
+  notes: String
+  status: ScanStatus
+}
+
+input ConfirmUploadInput {
+  scanId: ID!
+  s3Key: String!
+}
+
+input CreateAIResultInput {
+  scanId: ID!
+  modelName: String!
+  modelVersion: String
+  status: AIResultStatus
+  predictions: JSON
+  confidenceScore: Float
+  resultData: JSON
+  processedAt: DateTime
+  processingDurationMs: Int
+}
+
+# ── Queries & Mutations ────────────────────────────────────
+
+extend type Query {
+  """Get all scans for a patient"""
+  scansByPatient(patientId: ID!): [Scan!]!
+
+  """Get a single scan by ID"""
+  scan(id: ID!): Scan
+
+  """Generate a time-limited pre-signed GET URL for securely viewing a scan image"""
+  scanViewUrl(scanId: ID!): String!
+
+  """Get AI results for a scan"""
+  aiResultsByScan(scanId: ID!): [AIResult!]!
+}
+
+extend type Mutation {
+  """
+  Initiate a scan upload: creates a PENDING scan record and
+  returns a pre-signed S3 upload URL.
+  """
+  initiateScanUpload(input: CreateScanInput!): PresignedUploadResponse!
+
+  """Confirm that a file has been uploaded to S3"""
+  confirmScanUpload(input: ConfirmUploadInput!): Scan!
+
+  """Update scan metadata"""
+  updateScan(id: ID!, input: UpdateScanInput!): Scan!
+
+  """Soft-delete a scan"""
+  deleteScan(id: ID!): Boolean!
+
+  """Restore a soft-deleted scan"""
+  restoreScan(id: ID!): Scan!
+
+  """Store an AI analysis result for a scan (used by AI pipeline)"""
+  createAIResult(input: CreateAIResultInput!): AIResult!
+}

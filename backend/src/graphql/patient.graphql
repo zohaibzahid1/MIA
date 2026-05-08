@@ -1,0 +1,61 @@
+# ── Patient Types ───────────────────────────────────────────
+
+type Patient {
+  id: ID!
+  userId: Int!
+  firstName: String!
+  lastName: String!
+  dateOfBirth: String
+  gender: String
+  medicalRecordNumber: String!
+  notes: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+
+  user: User
+  scans: [Scan!]
+}
+
+# ── Inputs ──────────────────────────────────────────────────
+
+input CreatePatientInput {
+  firstName: String!
+  lastName: String!
+  dateOfBirth: String
+  gender: String
+  medicalRecordNumber: String!
+  notes: String
+}
+
+input UpdatePatientInput {
+  firstName: String
+  lastName: String
+  dateOfBirth: String
+  gender: String
+  notes: String
+}
+
+# ── Queries & Mutations ────────────────────────────────────
+
+extend type Query {
+  """Get all patients for the authenticated user"""
+  myPatients: [Patient!]!
+
+  """Get a single patient by ID (must belong to the authenticated user)"""
+  patient(id: ID!): Patient
+}
+
+extend type Mutation {
+  """Create a new patient under the authenticated user"""
+  createPatient(input: CreatePatientInput!): Patient!
+
+  """Update an existing patient"""
+  updatePatient(id: ID!, input: UpdatePatientInput!): Patient!
+
+  """Soft-delete a patient"""
+  deletePatient(id: ID!): Boolean!
+
+  """Restore a soft-deleted patient"""
+  restorePatient(id: ID!): Patient!
+}

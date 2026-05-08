@@ -1,0 +1,17 @@
+"""
+Base GraphQL schema defining root types that will be extended by other schema files.
+"""
+
+# Custom scalars
+scalar DateTime
+scalar JSON
+
+type Query {
+  # Base query - will be extended by other schema files
+  _empty: String
+}
+
+type Mutation {
+  # Base mutation - will be extended by other schema files
+  _empty: String
+}

@@ -1,0 +1,13 @@
+type TokenValidationResponse {
+  isValid: Boolean!
+  message: String!
+  newToken: String
+
+  user: User
+
+}
+
+type Query {
+  validateToken: TokenValidationResponse!
+  getGoogleAuthUrl: String!
+}
