@@ -21,9 +21,9 @@ export const performTokenValidation = async (
   rootStore: RootStore,
   currentPath?: string
 ): Promise<TokenValidationResult> => {
-  // Skip token validation if we're already on the auth pages
-  if (currentPath === '/auth' || currentPath === '/auth/success') {
-    console.log('User is on auth page, skipping token validation');
+  // Skip token validation if we're on the auth pages, home page, or root
+  if (currentPath === '/' || currentPath === '/auth' || currentPath === '/auth/success' || currentPath === '/home') {
+    console.log('User is on auth/home/root page, skipping token validation');
     return {
       isValid: true,
       shouldRedirect: false

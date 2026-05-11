@@ -34,6 +34,8 @@ interface FilteredPrediction {
 @Injectable()
 export class ScanService {
   private readonly logger = new Logger(ScanService.name);
+  private static readonly DEFAULT_AI_INFERENCE_URL =
+    'https://Faraz8-fyp-medical-image-ai-service-v1-1.hf.space/v1/infer';
 
   private static readonly SCAN_TYPE_MAP: Record<string, ScanType> = {
     xray: ScanType.XRAY,
@@ -153,7 +155,7 @@ export class ScanService {
     const modalityMap: Record<ScanType, string> = {
       [ScanType.XRAY]: 'xray',
       [ScanType.CT]: 'ct_scan',
-      [ScanType.MRI]: 'mri',
+      [ScanType.MRI]: 'brain_mri',
     };
 
     return modalityMap[scanType] ?? 'xray';
@@ -343,6 +345,9 @@ export class ScanService {
       selectedPrediction = this.pickCtPrediction(modelOutput);
     } else if (modality === 'xray') {
       selectedPrediction = this.pickXrayPrediction(modelOutput);
+    } else if (modality === 'brain_mri') {
+      selectedPrediction =
+        this.pickCtPrediction(modelOutput) ?? this.pickXrayPrediction(modelOutput);
     }
 
     const genericPredictionsSource =
@@ -390,11 +395,7 @@ export class ScanService {
         modality,
         imageUrl,
         provider: 'huggingface-space',
-        endpoint:
-          this.configService.get<string>(
-            'AI_INFERENCE_URL',
-            'https://faraz8-fyp-medical-image-ai-service.hf.space/v1/infer',
-          ) ?? null,
+        endpoint: this.getAiInferenceUrl(),
         status:
           typeof raw?.status === 'string'
             ? raw.status
@@ -415,6 +416,15 @@ export class ScanService {
     };
   }
 
+  private getAiInferenceUrl(): string | null {
+    return (
+      this.configService.get<string>(
+        'AI_INFERENCE_URL',
+        ScanService.DEFAULT_AI_INFERENCE_URL,
+      ) ?? null
+    );
+  }
+
   private async runExternalAiInference(scan: Scan): Promise<ExternalAiInferenceResult> {
     if (!scan.s3Key) {
       throw new BadRequestException(
@@ -424,10 +434,7 @@ export class ScanService {
 
     const modality = this.getInferenceModality(scan.scanType);
     const imageUrl = await this.s3Service.generatePresignedDownloadUrl(scan.s3Key);
-    const inferenceUrl = this.configService.get<string>(
-      'AI_INFERENCE_URL',
-      'https://faraz8-fyp-medical-image-ai-service.hf.space/v1/infer',
-    );
+    const inferenceUrl = this.getAiInferenceUrl();
 
     if (!inferenceUrl) {
       throw new BadRequestException('AI inference URL is not configured');
@@ -458,7 +465,6 @@ export class ScanService {
       method: 'POST',
       body: form,
     });
-
     const rawResponse = (await inferenceResponse.json().catch(() => ({}))) as Record<
       string,
       any
@@ -469,8 +475,7 @@ export class ScanService {
         `Inference request failed (HTTP ${inferenceResponse.status})`,
       );
     }
-
-    return this.filterInferenceResponse(rawResponse, modality, imageUrl);
+  return this.filterInferenceResponse(rawResponse, modality, imageUrl);
   }
 
   /**

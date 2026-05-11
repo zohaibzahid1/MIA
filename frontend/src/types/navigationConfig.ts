@@ -1,12 +1,6 @@
 import { LucideIcon } from "lucide-react";
 import {
   SquareTerminal,
-  ClipboardList,
-  Users,
-  UserCheck,
-  FileText,
-  BarChart3,
-  Building2,
   Stethoscope,
 } from "lucide-react";
 import { UserRole } from '@/stores/userStore';
@@ -26,7 +20,6 @@ export interface NavigationItem {
 
 export interface NavigationConfig {
   baseItems: Omit<NavigationItem, 'isActive'>[];
-  employeeItems: Omit<NavigationItem, 'isActive'>[];
 }
 
 export const getNavigationConfig = (): NavigationConfig => ({
@@ -59,28 +52,13 @@ export const getNavigationConfig = (): NavigationConfig => ({
       ],
     },
   ],
-  // employee-specific items
-  employeeItems: [
-    {
-      title: "Evaluations",
-      url: "/dashboard/evaluations",
-      icon: ClipboardList,
-      items: [
-        {
-          title: "Submit Current Reviews",
-          url: "/dashboard/submit-evaluations",
-        },
-      ],
-    }
-  ],
-
 });
 
 export const buildNavigationItems = (
   config: NavigationConfig,
   userRole: UserRole
 ): NavigationItem[] => {
-  const { baseItems, employeeItems } = config;
+  const { baseItems } = config;
 
   // Add isActive property to items based on current pathname
   const addActiveState = (items: Omit<NavigationItem, 'isActive'>[]): NavigationItem[] => {
@@ -90,13 +68,8 @@ export const buildNavigationItems = (
     }));
   };
 
-  // Build navigation based on role
-  let navigationItems: NavigationItem[] = addActiveState(baseItems);
-
-  // Add role-specific items
-  if (userRole === UserRole.EMPLOYEE) {
-    navigationItems = [...navigationItems, ...addActiveState(employeeItems)];
-  }
+  // Build navigation items
+  const navigationItems: NavigationItem[] = addActiveState(baseItems);
 
   return navigationItems;
 };

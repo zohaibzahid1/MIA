@@ -2,16 +2,20 @@
 import { observer } from "mobx-react-lite";
 import { useStore } from '@/context/storeContext';
 import { useRouter } from 'next/navigation';
-import {  useEffect } from 'react';
+import { useEffect } from 'react';
 
-function HomePage() {
+function RootPageComponent() {
   const { userStore } = useStore();
   const router = useRouter();
   
   useEffect(() => {
-    
+    // Redirect to dashboard if logged in, otherwise to home page
+    if (userStore.user) {
       router.push('/dashboard');
-  }, [router]);
+    } else {
+      router.push('/home');
+    }
+  }, [router, userStore.user]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -23,5 +27,5 @@ function HomePage() {
   );
 }
 
-export default observer(HomePage);
+export default observer(RootPageComponent);
 
